@@ -1,0 +1,198 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sistema de Citas API",
+    "description": "Documentación API del sistema de citas de la Fundación Levántate Mujer",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000"
+    }
+  ],
+  "paths": {
+    "/api/register": {
+      "post": {
+        "tags": ["Autenticación"],
+        "summary": "Registrar un nuevo usuario",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "format": "password" },
+                  "password_confirmation": { "type": "string", "format": "password" },
+                  "role": { "type": "string", "default": "psicologo" }
+                },
+                "required": ["name", "email", "password", "password_confirmation"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Usuario registrado con éxito" },
+          "400": { "description": "Datos inválidos" }
+        }
+      }
+    },
+    "/api/login": {
+      "post": {
+        "tags": ["Autenticación"],
+        "summary": "Login de usuario",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "format": "password" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login exitoso, devuelve token" },
+          "401": { "description": "Credenciales incorrectas" }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "tags": ["Autenticación"],
+        "summary": "Cerrar sesión",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "responses": {
+          "200": { "description": "Sesión cerrada correctamente" },
+          "401": { "description": "No autenticado" }
+        }
+      }
+    },
+    "/api/citas": {
+      "get": {
+        "tags": ["Citas"],
+        "summary": "Obtener todas las citas",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "responses": { "200": { "description": "Listado de citas" } }
+      },
+      "post": {
+        "tags": ["Citas"],
+        "summary": "Crear una nueva cita",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["paciente","fecha_hora","tipo"],
+                "properties": {
+                  "paciente": { "type": "string", "example": "Juan Pérez" },
+                  "fecha_hora": { "type": "string", "format": "date-time", "example": "2025-09-01 10:00:00" },
+                  "tipo": { "type": "string", "example": "psicologica" },
+                  "estado": { "type": "string", "example": "pendiente" },
+                  "prioridad": { "type": "string", "example": "alta" },
+                  "confirmada": { "type": "boolean", "example": false },
+                  "observaciones": { "type": "string", "example": "Primera consulta" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Cita creada correctamente" },
+          "401": { "description": "Usuario no autenticado" },
+          "422": { "description": "Datos inválidos" }
+        }
+      }
+    },
+    "/api/citas/{id}": {
+      "get": {
+        "tags": ["Citas"],
+        "summary": "Obtener una cita por ID",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Cita encontrada" },
+          "404": { "description": "Cita no encontrada" }
+        }
+      },
+      "put": {
+        "tags": ["Citas"],
+        "summary": "Actualizar una cita",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paciente": { "type": "string" },
+                  "fecha_hora": { "type": "string" },
+                  "tipo": { "type": "string" },
+                  "estado": { "type": "string" },
+                  "prioridad": { "type": "string" },
+                  "confirmada": { "type": "boolean" },
+                  "observaciones": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cita actualizada" },
+          "404": { "description": "Cita no encontrada" }
+        }
+      },
+      "delete": {
+        "tags": ["Citas"],
+        "summary": "Eliminar una cita",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "204": { "description": "Cita eliminada" },
+          "404": { "description": "Cita no encontrada" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Citas", "description": "Citas" },
+    { "name": "Autenticación", "description": "Registrar, login y logout" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
